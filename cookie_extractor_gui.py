@@ -7,109 +7,187 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QTableWidget, QTableWidgetItem, QFileDialog, 
                              QMessageBox, QTextEdit, QHeaderView, QFrame,
                              QSizePolicy)
-from PySide6.QtCore import Qt, QMimeData, QSize
-from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont, QPalette, QColor
+from PySide6.QtCore import Qt, QMimeData, QSize, QPropertyAnimation, QEasingCurve
+from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont, QPalette, QColor, QIcon
 
-class StyledButton(QPushButton):
-    """自定义样式按钮"""
+class SimpleButton(QPushButton):
+    """简约风格按钮"""
     def __init__(self, text, parent=None):
         super().__init__(text, parent)
-        self.setMinimumHeight(40)
-        self.setFont(QFont('Microsoft YaHei', 10))
+        self.setMinimumHeight(32)
+        self.setFont(QFont('Microsoft YaHei', 9))
         self.setCursor(Qt.PointingHandCursor)
+        
         self.setStyleSheet("""
             QPushButton {
-                background-color: #3F51B5;
+                background-color: #4A90E2;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                padding: 8px 20px;
-                font-weight: bold;
+                padding: 6px 16px;
+                font-weight: normal;
             }
             QPushButton:hover {
-                background-color: #303F9F;
+                background-color: #357ABD;
             }
             QPushButton:pressed {
-                background-color: #1A237E;
+                background-color: #2D6DA3;
             }
             QPushButton:disabled {
                 background-color: #BDBDBD;
             }
         """)
 
-class StyledLineEdit(QLineEdit):
-    """自定义样式输入框"""
+class SimpleLineEdit(QLineEdit):
+    """简约风格输入框"""
     def __init__(self, placeholder="", parent=None):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
-        self.setMinimumHeight(40)
-        self.setFont(QFont('Microsoft YaHei', 10))
+        self.setMinimumHeight(32)
+        self.setFont(QFont('Microsoft YaHei', 9))
         self.setStyleSheet("""
             QLineEdit {
-                border: 2px solid #E0E0E0;
+                border: 1px solid #E0E0E0;
                 border-radius: 4px;
-                padding: 8px 12px;
+                padding: 6px 12px;
                 background-color: white;
                 color: #333333;
             }
             QLineEdit:focus {
-                border: 2px solid #3F51B5;
+                border: 1px solid #4A90E2;
             }
             QLineEdit::placeholder {
-                color: #9E9E9E;
+                color: #999999;
             }
         """)
 
-class StyledTextEdit(QTextEdit):
-    """自定义样式文本编辑框"""
+class SimpleTextEdit(QTextEdit):
+    """简约风格文本编辑框"""
     def __init__(self, placeholder="", parent=None):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
-        self.setFont(QFont('Microsoft YaHei', 10))
+        self.setFont(QFont('Microsoft YaHei', 9))
         self.setStyleSheet("""
             QTextEdit {
-                border: 2px solid #E0E0E0;
+                border: 1px solid #E0E0E0;
                 border-radius: 4px;
                 padding: 8px;
                 background-color: white;
                 color: #333333;
             }
             QTextEdit:focus {
-                border: 2px solid #3F51B5;
+                border: 1px solid #4A90E2;
             }
             QTextEdit::placeholder {
-                color: #9E9E9E;
+                color: #999999;
+            }
+            /* 滚动条样式 */
+            QScrollBar:vertical {
+                border: none;
+                background: #F5F5F5;
+                width: 8px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: #BDBDBD;
+                min-height: 20px;
+                border-radius: 4px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #9E9E9E;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
             }
         """)
+        # 启用拖放功能
+        self.setAcceptDrops(True)
+    
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+    
+    def dropEvent(self, event):
+        urls = event.mimeData().urls()
+        if urls:
+            file_path = urls[0].toLocalFile()
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                self.setText(content)
+            except Exception as e:
+                QMessageBox.warning(self, "错误", f"读取文件时出错：{str(e)}")
 
-class StyledTable(QTableWidget):
-    """自定义样式表格"""
+class SimpleTable(QTableWidget):
+    """简约风格表格"""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFont(QFont('Microsoft YaHei', 10))
+        self.setFont(QFont('Microsoft YaHei', 9))
         self.setStyleSheet("""
             QTableWidget {
-                border: 2px solid #E0E0E0;
+                border: 1px solid #E0E0E0;
                 border-radius: 4px;
                 background-color: white;
-                gridline-color: #F5F5F5;
+                gridline-color: #EEEEEE;
                 color: #333333;
             }
             QHeaderView::section {
                 background-color: #F5F5F5;
-                padding: 8px;
+                padding: 8px 12px;
                 border: none;
                 font-weight: bold;
                 color: #333333;
                 border-bottom: 1px solid #E0E0E0;
             }
             QTableWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #F5F5F5;
+                padding: 8px 12px;
+                border-bottom: 1px solid #EEEEEE;
             }
             QTableWidget::item:selected {
-                background-color: #E8EAF6;
-                color: #3F51B5;
+                background-color: #F5F5F5;
+                color: #333333;
+            }
+            QTableWidget::item:hover {
+                background-color: #F8F9FA;
+            }
+            /* 设置交替行颜色 */
+            QTableWidget::item:alternate {
+                background-color: #FAFAFA;
+            }
+            /* 滚动条样式 */
+            QScrollBar:vertical {
+                border: none;
+                background: #F5F5F5;
+                width: 8px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: #BDBDBD;
+                min-height: 20px;
+                border-radius: 4px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #9E9E9E;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+            QScrollBar:horizontal {
+                border: none;
+                background: #F5F5F5;
+                height: 8px;
+                margin: 0px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #BDBDBD;
+                min-width: 20px;
+                border-radius: 4px;
+            }
+            QScrollBar::handle:horizontal:hover {
+                background: #9E9E9E;
+            }
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                width: 0px;
             }
         """)
         self.setShowGrid(True)
@@ -119,6 +197,14 @@ class StyledTable(QTableWidget):
         self.setSelectionBehavior(QTableWidget.SelectRows)
         self.horizontalHeader().setStretchLastSection(True)
         self.setEditTriggers(QTableWidget.NoEditTriggers)
+        
+        # 设置表格列宽
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.horizontalHeader().setDefaultSectionSize(120)
+        
+        # 设置水平滚动条
+        self.setHorizontalScrollMode(QTableWidget.ScrollPerPixel)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
 class CookieExtractorGUI(QMainWindow):
     def __init__(self):
@@ -129,19 +215,15 @@ class CookieExtractorGUI(QMainWindow):
     def initUI(self):
         """初始化UI界面"""
         self.setWindowTitle('Cookie信息提取器')
-        self.setMinimumSize(1000, 700)
+        self.setMinimumSize(900, 600)
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #F5F5F5;
+                background-color: white;
             }
             QLabel {
                 color: #333333;
-                font-weight: 500;
-            }
-            QFrame {
-                background-color: white;
-                border-radius: 8px;
-                border: 1px solid #E0E0E0;
+                font-weight: normal;
+                font-size: 13px;
             }
         """)
         
@@ -150,120 +232,147 @@ class CookieExtractorGUI(QMainWindow):
         self.setCentralWidget(central_widget)
         
         # 主布局
-        layout = QVBoxLayout(central_widget)
-        layout.setSpacing(16)
-        layout.setContentsMargins(24, 24, 24, 24)
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(20, 20, 20, 20)
         
         # 标题
         title_label = QLabel('Cookie信息提取器')
-        title_label.setFont(QFont('Microsoft YaHei', 20, QFont.Bold))
-        title_label.setStyleSheet('color: #3F51B5; margin-bottom: 16px;')
+        title_label.setStyleSheet("""
+            QLabel {
+                color: #333333;
+                font-size: 20px;
+                font-weight: bold;
+                margin-bottom: 16px;
+            }
+        """)
         title_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title_label)
+        main_layout.addWidget(title_label)
+        
+        # 上半部分布局（文件导入和域名匹配）
+        top_layout = QVBoxLayout()
+        top_layout.setSpacing(16)
         
         # 文件导入区域
-        import_frame = QFrame()
-        import_layout = QHBoxLayout(import_frame)
-        import_layout.setContentsMargins(16, 16, 16, 16)
-        import_layout.setSpacing(12)
+        file_frame = QFrame()
+        file_layout = QVBoxLayout(file_frame)
+        file_layout.setSpacing(8)
+        file_layout.setContentsMargins(0, 0, 0, 0)
         
-        import_label = QLabel('文件导入：')
-        import_label.setFont(QFont('Microsoft YaHei', 10, QFont.Bold))
-        import_label.setStyleSheet('color: #333333;')
+        file_label = QLabel('文件导入')
+        file_label.setStyleSheet('font-size: 14px; color: #333333;')
+        file_layout.addWidget(file_label)
+        
+        # 文件路径和按钮布局
+        path_layout = QHBoxLayout()
+        path_layout.setSpacing(8)
         
         self.file_path_label = QLabel('未选择文件')
-        self.file_path_label.setFont(QFont('Microsoft YaHei', 10))
-        self.file_path_label.setStyleSheet('color: #666666;')
+        self.file_path_label.setStyleSheet("""
+            QLabel {
+                color: #666666;
+                padding: 6px 12px;
+                background-color: #F8F9FA;
+                border: 1px solid #E0E0E0;
+                border-radius: 4px;
+            }
+        """)
         self.file_path_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         
-        import_btn = StyledButton('选择文件')
-        import_btn.setFixedWidth(120)
+        import_btn = SimpleButton('选择文件')
+        import_btn.setFixedWidth(90)
         import_btn.clicked.connect(self.import_file)
         
-        import_layout.addWidget(import_label)
-        import_layout.addWidget(self.file_path_label)
-        import_layout.addWidget(import_btn)
+        path_layout.addWidget(self.file_path_label)
+        path_layout.addWidget(import_btn)
+        file_layout.addLayout(path_layout)
         
         # Cookie文本输入区域
-        text_frame = QFrame()
-        text_layout = QVBoxLayout(text_frame)
-        text_layout.setContentsMargins(16, 16, 16, 16)
-        text_layout.setSpacing(8)
+        self.cookie_text = SimpleTextEdit('请在此粘贴Cookie文本或拖放文件')
+        self.cookie_text.setFixedHeight(100)
+        file_layout.addWidget(self.cookie_text)
         
-        text_label = QLabel('Cookie文本')
-        text_label.setFont(QFont('Microsoft YaHei', 10, QFont.Bold))
-        text_label.setStyleSheet('color: #333333;')
-        
-        self.cookie_text = StyledTextEdit('在此粘贴Cookie文本或拖放文件...')
-        self.cookie_text.setAcceptDrops(True)
-        self.cookie_text.dragEnterEvent = self.dragEnterEvent
-        self.cookie_text.dropEvent = self.dropEvent
-        self.cookie_text.setMinimumHeight(120)
-        
-        text_layout.addWidget(text_label)
-        text_layout.addWidget(self.cookie_text)
+        top_layout.addWidget(file_frame)
         
         # 域名匹配区域
-        match_frame = QFrame()
-        match_layout = QHBoxLayout(match_frame)
-        match_layout.setContentsMargins(16, 16, 16, 16)
-        match_layout.setSpacing(12)
+        domain_frame = QFrame()
+        domain_layout = QVBoxLayout(domain_frame)
+        domain_layout.setSpacing(8)
+        domain_layout.setContentsMargins(0, 0, 0, 0)
         
-        domain_label = QLabel('域名匹配：')
-        domain_label.setFont(QFont('Microsoft YaHei', 10, QFont.Bold))
-        domain_label.setStyleSheet('color: #333333;')
+        domain_label = QLabel('域名匹配')
+        domain_label.setStyleSheet('font-size: 14px; color: #333333;')
+        domain_layout.addWidget(domain_label)
         
-        self.domain_input = StyledLineEdit('输入要匹配的域名（例如：twitter）')
-        match_btn = StyledButton('提取Cookie')
-        match_btn.setFixedWidth(120)
+        # 域名输入和匹配按钮布局
+        input_layout = QHBoxLayout()
+        input_layout.setSpacing(8)
+        
+        self.domain_input = SimpleLineEdit('输入要匹配的域名（例如：twitter）')
+        match_btn = SimpleButton('提取Cookie')
+        match_btn.setFixedWidth(90)
         match_btn.clicked.connect(self.extract_cookies)
         
-        match_layout.addWidget(domain_label)
-        match_layout.addWidget(self.domain_input)
-        match_layout.addWidget(match_btn)
+        input_layout.addWidget(self.domain_input)
+        input_layout.addWidget(match_btn)
+        domain_layout.addLayout(input_layout)
         
-        # 结果显示区域
+        top_layout.addWidget(domain_frame)
+        main_layout.addLayout(top_layout)
+        
+        # 匹配结果区域
         result_frame = QFrame()
         result_layout = QVBoxLayout(result_frame)
-        result_layout.setContentsMargins(16, 16, 16, 16)
         result_layout.setSpacing(8)
+        result_layout.setContentsMargins(0, 0, 0, 0)
         
+        result_header = QHBoxLayout()
         result_label = QLabel('匹配结果')
-        result_label.setFont(QFont('Microsoft YaHei', 10, QFont.Bold))
-        result_label.setStyleSheet('color: #333333;')
-        
-        self.result_table = StyledTable()
-        self.result_table.setColumnCount(9)
-        self.result_table.setHorizontalHeaderLabels([
-            '域名', '名称', '值', '过期时间', 'HttpOnly', 
-            'Path', 'SameSite', 'Secure', 'ID'
-        ])
-        
-        # 设置表格列宽自适应
-        header = self.result_table.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        
-        result_layout.addWidget(result_label)
-        result_layout.addWidget(self.result_table)
-        
-        # 保存按钮
-        save_btn = StyledButton('保存结果')
-        save_btn.setFixedWidth(200)
+        result_label.setStyleSheet('font-size: 14px; color: #333333;')
+        save_btn = SimpleButton('保存结果')
+        save_btn.setFixedWidth(90)
         save_btn.clicked.connect(self.save_results)
         
-        # 保存按钮容器（用于居中显示）
-        save_container = QWidget()
-        save_layout = QHBoxLayout(save_container)
-        save_layout.addStretch()
-        save_layout.addWidget(save_btn)
-        save_layout.addStretch()
+        result_header.addWidget(result_label)
+        result_header.addStretch()
+        result_header.addWidget(save_btn)
+        result_layout.addLayout(result_header)
         
-        # 添加所有组件到主布局
-        layout.addWidget(import_frame)
-        layout.addWidget(text_frame)
-        layout.addWidget(match_frame)
-        layout.addWidget(result_frame)
-        layout.addWidget(save_container)
+        # 结果表格
+        self.result_table = SimpleTable()
+        self.result_table.setColumnCount(9)
+        self.result_table.setHorizontalHeaderLabels([
+            '域名', 'Cookie名称', 'Cookie值', '过期时间', 'HttpOnly',
+            '路径', 'SameSite', 'Secure', 'ID'
+        ])
+        result_layout.addWidget(self.result_table)
+        
+        # 设置表格列宽
+        header = self.result_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.Interactive)  # 域名
+        header.setSectionResizeMode(1, QHeaderView.Interactive)  # 名称
+        header.setSectionResizeMode(2, QHeaderView.Stretch)      # 值
+        header.setSectionResizeMode(3, QHeaderView.Interactive)  # 过期时间
+        header.setSectionResizeMode(4, QHeaderView.Interactive)  # HttpOnly
+        header.setSectionResizeMode(5, QHeaderView.Interactive)  # 路径
+        header.setSectionResizeMode(6, QHeaderView.Interactive)  # SameSite
+        header.setSectionResizeMode(7, QHeaderView.Interactive)  # Secure
+        header.setSectionResizeMode(8, QHeaderView.Interactive)  # ID
+        
+        # 设置默认列宽
+        self.result_table.setColumnWidth(0, 150)  # 域名
+        self.result_table.setColumnWidth(1, 150)  # 名称
+        self.result_table.setColumnWidth(3, 150)  # 过期时间
+        self.result_table.setColumnWidth(4, 80)   # HttpOnly
+        self.result_table.setColumnWidth(5, 80)   # 路径
+        self.result_table.setColumnWidth(6, 100)  # SameSite
+        self.result_table.setColumnWidth(7, 80)   # Secure
+        self.result_table.setColumnWidth(8, 60)   # ID
+        
+        main_layout.addWidget(result_frame, stretch=1)
+        
+        # 设置窗口图标
+        self.setWindowIcon(QIcon('icon.png'))
         
     def import_file(self):
         """导入文件"""
@@ -340,17 +449,43 @@ class CookieExtractorGUI(QMainWindow):
         self.result_table.setRowCount(len(cookies))
         
         for row, cookie in enumerate(cookies):
+            # 保存原始时间戳到表格的userData中
+            expiration = cookie.get('expirationDate', 0)
+            
+            # 设置每列的值
             self.result_table.setItem(row, 0, QTableWidgetItem(str(cookie.get('domain', ''))))
             self.result_table.setItem(row, 1, QTableWidgetItem(str(cookie.get('name', ''))))
             self.result_table.setItem(row, 2, QTableWidgetItem(str(cookie.get('value', ''))))
-            self.result_table.setItem(row, 3, QTableWidgetItem(str(cookie.get('expirationDate', ''))))
-            self.result_table.setItem(row, 4, QTableWidgetItem(str(cookie.get('httpOnly', ''))))
-            self.result_table.setItem(row, 5, QTableWidgetItem(str(cookie.get('path', ''))))
+            
+            # 创建时间显示项
+            time_item = QTableWidgetItem()
+            time_item.setData(Qt.UserRole, float(expiration) if expiration else 0)  # 存储原始时间戳
+            
+            # 格式化显示时间
+            if expiration:
+                from datetime import datetime
+                try:
+                    expiration_date = datetime.fromtimestamp(float(expiration)).strftime('%Y-%m-%d %H:%M:%S')
+                    time_item.setText(expiration_date)
+                except:
+                    time_item.setText(str(expiration))
+            else:
+                time_item.setText('')
+            
+            self.result_table.setItem(row, 3, time_item)
+            
+            # 设置其他属性
+            self.result_table.setItem(row, 4, QTableWidgetItem(str(cookie.get('httpOnly', False))))
+            self.result_table.setItem(row, 5, QTableWidgetItem(str(cookie.get('path', '/'))))
             self.result_table.setItem(row, 6, QTableWidgetItem(str(cookie.get('sameSite', ''))))
-            self.result_table.setItem(row, 7, QTableWidgetItem(str(cookie.get('secure', ''))))
+            self.result_table.setItem(row, 7, QTableWidgetItem(str(cookie.get('secure', False))))
             self.result_table.setItem(row, 8, QTableWidgetItem(str(cookie.get('id', ''))))
-        
-        self.result_table.resizeColumnsToContents()
+            
+            # 设置单元格对齐方式
+            for col in range(self.result_table.columnCount()):
+                item = self.result_table.item(row, col)
+                if item:
+                    item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
     
     def save_results(self):
         """保存结果到文件"""
@@ -367,23 +502,27 @@ class CookieExtractorGUI(QMainWindow):
         
         if file_path:
             try:
-                # 从表格中获取数据
+                # 从表格中获取完整的Cookie数据
                 cookies = []
                 for row in range(self.result_table.rowCount()):
+                    # 获取存储在UserRole中的原始时间戳
+                    time_item = self.result_table.item(row, 3)
+                    expiration_timestamp = time_item.data(Qt.UserRole) if time_item else 0
+
                     cookie = {
                         'domain': self.result_table.item(row, 0).text(),
                         'name': self.result_table.item(row, 1).text(),
                         'value': self.result_table.item(row, 2).text(),
-                        'expirationDate': float(self.result_table.item(row, 3).text() or 0),
+                        'expirationDate': float(expiration_timestamp),
                         'httpOnly': self.result_table.item(row, 4).text().lower() == 'true',
                         'path': self.result_table.item(row, 5).text(),
                         'sameSite': self.result_table.item(row, 6).text(),
                         'secure': self.result_table.item(row, 7).text().lower() == 'true',
-                        'id': int(self.result_table.item(row, 8).text() or 0)
+                        'id': int(self.result_table.item(row, 8).text().strip() or 0)
                     }
                     cookies.append(cookie)
                 
-                # 保存到文件
+                # 保存到文件，保持格式美观
                 with open(file_path, 'w', encoding='utf-8') as f:
                     json.dump(cookies, f, indent=2, ensure_ascii=False)
                 
