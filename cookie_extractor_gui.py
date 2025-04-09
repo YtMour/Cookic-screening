@@ -1,7 +1,9 @@
 import sys
+import os
 import json
 from pathlib import Path
 from typing import List, Dict, Any
+from datetime import datetime
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QHBoxLayout, QPushButton, QLineEdit, QLabel, 
                              QTableWidget, QTableWidgetItem, QFileDialog, 
@@ -9,6 +11,15 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QSizePolicy)
 from PySide6.QtCore import Qt, QMimeData, QSize, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont, QPalette, QColor, QIcon
+
+def resource_path(relative_path):
+    """获取资源绝对路径"""
+    try:
+        # PyInstaller创建临时文件夹，将路径存储在_MEIPASS中
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 class SimpleButton(QPushButton):
     """简约风格按钮"""
@@ -398,9 +409,11 @@ class CookieExtractorGUI(QMainWindow):
         main_layout.addWidget(result_frame, stretch=1)
         
         # 设置窗口图标
-        icon_path = 'icons.ico' if Path('icons.ico').exists() else 'icons.png'
-        if Path(icon_path).exists():
-            self.setWindowIcon(QIcon(icon_path))
+        for icon_name in ['icons.ico', 'icons.png']:
+            icon_path = resource_path(icon_name)
+            if os.path.exists(icon_path):
+                self.setWindowIcon(QIcon(icon_path))
+                break
         
     def import_file(self):
         """导入文件"""
@@ -499,7 +512,6 @@ class CookieExtractorGUI(QMainWindow):
             
             # 格式化显示时间
             if expiration:
-                from datetime import datetime
                 try:
                     expiration_date = datetime.fromtimestamp(float(expiration)).strftime('%Y-%m-%d %H:%M:%S')
                     time_item.setText(expiration_date)
