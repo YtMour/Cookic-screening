@@ -329,14 +329,39 @@ class CookieExtractorGUI(QMainWindow):
         result_header = QHBoxLayout()
         result_label = QLabel('匹配结果')
         result_label.setStyleSheet('font-size: 14px; color: #333333;')
+        
+        # 添加匹配结果数量显示
+        self.result_count_label = QLabel('0 个结果')
+        self.result_count_label.setStyleSheet("""
+            QLabel {
+                color: #666666;
+                padding: 4px 8px;
+                background-color: #F5F5F5;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+        """)
+        
         save_btn = SimpleButton('保存结果')
         save_btn.setFixedWidth(90)
         save_btn.clicked.connect(self.save_results)
         
         result_header.addWidget(result_label)
+        result_header.addWidget(self.result_count_label)
         result_header.addStretch()
         result_header.addWidget(save_btn)
         result_layout.addLayout(result_header)
+        
+        # 添加表格说明标签
+        table_info = QLabel('提示：表格显示了所有匹配的 Cookie 信息，包括域名、名称、值、过期时间等属性。可以通过点击列标题进行排序。')
+        table_info.setStyleSheet("""
+            QLabel {
+                color: #666666;
+                font-size: 12px;
+                padding: 4px 0;
+            }
+        """)
+        result_layout.addWidget(table_info)
         
         # 结果表格
         self.result_table = SimpleTable()
@@ -351,7 +376,7 @@ class CookieExtractorGUI(QMainWindow):
         header = self.result_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.Interactive)  # 域名
         header.setSectionResizeMode(1, QHeaderView.Interactive)  # 名称
-        header.setSectionResizeMode(2, QHeaderView.Stretch)      # 值
+        header.setSectionResizeMode(2, QHeaderView.Interactive)  # 值 - 改为Interactive以确保显示
         header.setSectionResizeMode(3, QHeaderView.Interactive)  # 过期时间
         header.setSectionResizeMode(4, QHeaderView.Interactive)  # HttpOnly
         header.setSectionResizeMode(5, QHeaderView.Interactive)  # 路径
@@ -362,6 +387,7 @@ class CookieExtractorGUI(QMainWindow):
         # 设置默认列宽
         self.result_table.setColumnWidth(0, 150)  # 域名
         self.result_table.setColumnWidth(1, 150)  # 名称
+        self.result_table.setColumnWidth(2, 250)  # 值 - 设置更大的默认宽度
         self.result_table.setColumnWidth(3, 150)  # 过期时间
         self.result_table.setColumnWidth(4, 80)   # HttpOnly
         self.result_table.setColumnWidth(5, 80)   # 路径
@@ -372,7 +398,9 @@ class CookieExtractorGUI(QMainWindow):
         main_layout.addWidget(result_frame, stretch=1)
         
         # 设置窗口图标
-        self.setWindowIcon(QIcon('icon.png'))
+        icon_path = 'icons.ico' if Path('icons.ico').exists() else 'icons.png'
+        if Path(icon_path).exists():
+            self.setWindowIcon(QIcon(icon_path))
         
     def import_file(self):
         """导入文件"""
@@ -448,18 +476,26 @@ class CookieExtractorGUI(QMainWindow):
         """显示结果到表格"""
         self.result_table.setRowCount(len(cookies))
         
+        # 更新匹配结果数量
+        self.result_count_label.setText(f'共 {len(cookies)} 个结果')
+        
         for row, cookie in enumerate(cookies):
             # 保存原始时间戳到表格的userData中
             expiration = cookie.get('expirationDate', 0)
             
-            # 设置每列的值
+            # 设置域名和名称
             self.result_table.setItem(row, 0, QTableWidgetItem(str(cookie.get('domain', ''))))
             self.result_table.setItem(row, 1, QTableWidgetItem(str(cookie.get('name', ''))))
-            self.result_table.setItem(row, 2, QTableWidgetItem(str(cookie.get('value', ''))))
+            
+            # 设置value值，确保正确显示
+            value = str(cookie.get('value', ''))
+            value_item = QTableWidgetItem(value)
+            value_item.setToolTip(value)  # 添加工具提示，方便查看完整内容
+            self.result_table.setItem(row, 2, value_item)
             
             # 创建时间显示项
             time_item = QTableWidgetItem()
-            time_item.setData(Qt.UserRole, float(expiration) if expiration else 0)  # 存储原始时间戳
+            time_item.setData(Qt.UserRole, float(expiration) if expiration else 0)
             
             # 格式化显示时间
             if expiration:
@@ -481,11 +517,15 @@ class CookieExtractorGUI(QMainWindow):
             self.result_table.setItem(row, 7, QTableWidgetItem(str(cookie.get('secure', False))))
             self.result_table.setItem(row, 8, QTableWidgetItem(str(cookie.get('id', ''))))
             
-            # 设置单元格对齐方式
+            # 设置单元格对齐方式和工具提示
             for col in range(self.result_table.columnCount()):
                 item = self.result_table.item(row, col)
                 if item:
                     item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+                    if not item.toolTip():
+                        item.setToolTip(item.text())
+                    # 确保单元格内容可见
+                    item.setFlags(item.flags() | Qt.ItemIsEnabled)
     
     def save_results(self):
         """保存结果到文件"""
@@ -522,9 +562,9 @@ class CookieExtractorGUI(QMainWindow):
                     }
                     cookies.append(cookie)
                 
-                # 保存到文件，保持格式美观
+                # 保存到文件，使用单行格式（不缩进，不换行）
                 with open(file_path, 'w', encoding='utf-8') as f:
-                    json.dump(cookies, f, indent=2, ensure_ascii=False)
+                    json.dump(cookies, f, indent=None, separators=(',', ':'), ensure_ascii=False)
                 
                 QMessageBox.information(self, "成功", "结果已保存")
                 
